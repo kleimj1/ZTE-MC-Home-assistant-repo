@@ -248,30 +248,39 @@ class zteRouter:
         cookie_header = self.build_cookie_header()
         if cookie_header:
             header['Cookie'] = cookie_header
+
+        # 1) First compute the hashed password:
         hashPassword = self.hash(password).upper()
-        logger.debug(f"Hashed password: {hashPassword}")
         ztePass = self.hash(hashPassword + LD).upper()
-        logger.debug(f"Hashed password+LD: {ztePass}")
-        old_login = self.getVersion()
+        logger.debug(f"ztePass (hashed password+LD): {ztePass}")
 
+        # 2) Compute AD so it’s available if we need multi-user login
+        AD = self.get_AD()
+
+        # 3) Decide whether we do multi-user login or single-user login
         if username is not None and username != "":
+            # multi-user
             goform_id = 'LOGIN_MULTI_USER'
-            logger.debug(f"Username is not none selecting LOGIN_MULTI_USER")
+            payload = {
+                'isTest': 'false',
+                'goformId': goform_id,
+                'user': username,        # <-- important: use 'user' instead of 'username'
+                'password': ztePass,
+                'AD': AD                 # <-- add AD for multi-user login
+            }
+            logger.debug("Using multi-user login (LOGIN_MULTI_USER) with AD")
         else:
+            # older single-user
             goform_id = 'LOGIN'
-            logger.debug(f"Username is none selecting LOGIN")
+            payload = {
+                'isTest': 'false',
+                'goformId': goform_id,
+                'password': ztePass
+            }
+            logger.debug("Using single-user login (LOGIN) without AD")
 
-        payload = {
-            'isTest': 'false',
-            'goformId': goform_id,
-            'password': ztePass
-        }
-
-        if username is not None and username != "":
-            payload['username'] = username
-
+        # 4) Perform the request
         url = self.referer + "goform/goform_set_cmd_process"
-        # Prepare the encoded form data
         encoded_payload = urllib.parse.urlencode(payload)
         body = encoded_payload.encode('utf-8')
 
@@ -281,6 +290,7 @@ class zteRouter:
             # Parse Set-Cookie header
             set_cookie_header = r.headers.get('Set-Cookie', '')
             self.update_cookies(set_cookie_header)
+
             # Check if 'stok' is in cookies
             stok = self.cookies.get('stok')
             if not stok:
@@ -288,9 +298,11 @@ class zteRouter:
                 raise ValueError("Failed to obtain a valid cookie from the router")
             logger.info(f"Obtained cookie: stok={stok}")
             return stok
+
         except Exception as e:
             logger.error(f"Failed to obtain cookie: {e}")
             raise
+
 
     def get_RD(self):
         logger.debug("Fetching RD value")
