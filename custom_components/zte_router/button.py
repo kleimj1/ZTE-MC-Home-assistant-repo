@@ -13,6 +13,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     main_coordinator = coordinators["coordinator"]
     ip_entry = config_entry.data["router_ip"]
     password_entry = config_entry.data["router_password"]
+    
+    # Handle username (only required for certain router models)
+    username_entry = config_entry.data.get("router_username") if config_entry.data.get("router_type") in ["MC888A", "MC889A"] else None
 
     # Retrieve phone numbers and messages from configuration options or data
     phone_number = config_entry.options.get("phone_number") or config_entry.data.get("phone_number", "13909")
@@ -23,25 +26,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     message_2 = config_entry.options.get("message_2", "") or config_entry.data.get("message_2", "")
 
     async_add_entities([
-        ZTERouterButton(main_coordinator, ip_entry, password_entry, phone_number, sms_message, "Send SMS 50GB", "8"),
-        ZTERouterButton(main_coordinator, ip_entry, password_entry, phone_number_1, message_1, "Send SMS 1", "8"),
-        ZTERouterButton(main_coordinator, ip_entry, password_entry, phone_number_2, message_2, "Send SMS 2", "8"),
-        ZTERouterButton(main_coordinator, ip_entry, password_entry, None, None, "Reboot Router", "4"),
-        ZTERouterButton(main_coordinator, ip_entry, password_entry, None, None, "Delete All SMS", "5"),
-        ZTERouterButton(main_coordinator, ip_entry, password_entry, None, None, "Connect Data", "9"),
-        ZTERouterButton(main_coordinator, ip_entry, password_entry, None, None, "Disconnect Data", "10"),
-        ZTERouterButton(main_coordinator, ip_entry, password_entry, None, None, "Set 5G SA", "11"),
-        ZTERouterButton(main_coordinator, ip_entry, password_entry, None, None, "Set 5G NSA", "12")
+        ZTERouterButton(main_coordinator, ip_entry, password_entry, username_entry, phone_number, sms_message, "Send SMS 50GB", "8"),
+        ZTERouterButton(main_coordinator, ip_entry, password_entry, username_entry, phone_number_1, message_1, "Send SMS 1", "8"),
+        ZTERouterButton(main_coordinator, ip_entry, password_entry, username_entry, phone_number_2, message_2, "Send SMS 2", "8"),
+        ZTERouterButton(main_coordinator, ip_entry, password_entry, username_entry, None, None, "Reboot Router", "4"),
+        ZTERouterButton(main_coordinator, ip_entry, password_entry, username_entry, None, None, "Delete All SMS", "5"),
+        ZTERouterButton(main_coordinator, ip_entry, password_entry, username_entry, None, None, "Connect Data", "9"),
+        ZTERouterButton(main_coordinator, ip_entry, password_entry, username_entry, None, None, "Disconnect Data", "10"),
+        ZTERouterButton(main_coordinator, ip_entry, password_entry, username_entry, None, None, "Set 5G SA", "11"),
+        ZTERouterButton(main_coordinator, ip_entry, password_entry, username_entry, None, None, "Set 5G NSA", "12")
     ], False)
 
 class ZTERouterButton(CoordinatorEntity, ButtonEntity):
     """Representation of a button to control the ZTE router."""
 
-    def __init__(self, coordinator, ip_entry, password_entry, phone_number, sms_message, name, command):
+    def __init__(self, coordinator, ip_entry, password_entry, username_entry, phone_number, sms_message, name, command):
         """Initialize the button."""
         super().__init__(coordinator)
         self._ip = ip_entry
         self._password = password_entry
+        self._username = username_entry if username_entry else ""  # Ensure username is always a string
         self._phone_number = phone_number
         self._sms_message = sms_message
         self._name = name
@@ -68,6 +72,7 @@ class ZTERouterButton(CoordinatorEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         _LOGGER.info(f"Button '{self._name}' was pressed.")
+
         if self._command == "8":
             if not self._phone_number or not self._sms_message:
                 _LOGGER.error(f"Phone number or message not set for {self._name}")
@@ -81,7 +86,7 @@ class ZTERouterButton(CoordinatorEntity, ButtonEntity):
         await self.coordinator.async_request_refresh()
 
     def _execute_command(self):
-        """Run the mc.py script with the specified command."""
+        """Run the mc.py script with the specified command, including username handling."""
         try:
             cmd = [
                 "python3",
@@ -89,9 +94,14 @@ class ZTERouterButton(CoordinatorEntity, ButtonEntity):
                 self._ip,
                 self._password,
                 self._command,
-                self._phone_number or "",
-                self._sms_message or ""
+                self._username  # Always include username, even if it's an empty string
             ]
+
+            # Append phone number and message for SMS commands
+            if self._command == "8":
+                cmd.extend([self._phone_number or "", self._sms_message or ""])
+
+            _LOGGER.info(f"Executing command: {cmd}")
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             _LOGGER.info(f"{self._name} command output: {result.stdout}")
         except subprocess.CalledProcessError as e:
