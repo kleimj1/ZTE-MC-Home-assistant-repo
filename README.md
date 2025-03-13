@@ -74,7 +74,7 @@ The custom integration is located in the `custom_components/zte_router` director
 2. Various errors in sensors etc. - This integration is classified as beta right now but can be tested by anyone. 
 4. Any suggestion you have please open the issues tab
 5. I will push new builds as soon i will have more time. Make sure you "star" this integration. 
-6. If u wanna donate for beer let me know :P 
+6. If you use addon in Home assistant this will pull data from router, so if you are loged in in web page that will couse logout , so if you need to do some modifications on router temporary disable the addon in HA
 
 ## Contributors
 
