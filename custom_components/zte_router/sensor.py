@@ -116,6 +116,19 @@ def extract_json(output):
         _LOGGER.debug(f"Raw output that caused the error: {output}")
         return "{}"
 
+class ZTESMSSensor(Entity):
+    """Sensor für empfangene SMS vom ZTE Router."""
+
+    def __init__(self, coordinator, host, password):
+        super().__init__()
+        self._host = host
+        self._password = password
+        self._state = None
+
+    def update(self):
+        sms_list = get_sms(self._host, self._password)
+        if sms_list:
+            self._state = sms_list[-1]["content"]  # Letzte empfangene SMS
 
 class ZTERouterDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, ip_entry, password_entry, username_entry, ping_interval):
