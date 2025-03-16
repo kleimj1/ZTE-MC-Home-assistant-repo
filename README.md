@@ -61,6 +61,17 @@ MC888
 ![enter image description here](https://raw.githubusercontent.com/Kajkac/ZTE-MC-Home-assistant-repo/main/zte.png)
 
 This repository contains the ZTE Router custom integration and an add-on to deploy it in Home Assistant.
+## SMS-Benachrichtigungen
+Die Integration unterstützt das Senden und Empfangen von SMS über den ZTE MC801A.
+
+### Konfiguration:
+1. `configuration.yaml` erweitern:
+   ```yaml
+   notify:
+     - platform: zte_router
+       name: "zte_sms"
+       host: "192.168.0.1"
+       password: "admin"
 
 ## Custom Integration
 
