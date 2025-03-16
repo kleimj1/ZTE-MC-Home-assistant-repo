@@ -1,5 +1,6 @@
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 import voluptuous as vol
 from .const import DOMAIN, DEFAULT_USERNAME
 
