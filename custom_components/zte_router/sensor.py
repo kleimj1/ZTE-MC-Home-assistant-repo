@@ -118,8 +118,8 @@ def extract_json(output):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     """Set up the ZTE SMS sensor from a config entry."""
-    host = entry.data["host"]
-    password = entry.data["password"]
+    host = entry.data["Router_IP"]
+    password = entry.data["Router_Password"]
     async_add_entities([ZTESMSSensor(host, password)], True)
 
 class ZTESMSSensor(Entity):
