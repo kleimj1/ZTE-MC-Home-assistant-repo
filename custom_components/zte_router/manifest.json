@@ -8,5 +8,6 @@
   "codeowners": ["@kleimj1"],
   "iot_class": "local_polling",
   "integration_type": "hub",
-  "services": ["notify"]
+  "services": ["notify"],
+  "dependencies": ["sensor"]
 }
