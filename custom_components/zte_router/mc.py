@@ -38,7 +38,29 @@ ext = ("``````````````````^```````````````````{}`````\\````````````[~]`"
 
 # Create a PoolManager instance to handle HTTP requests
 s = urllib3.PoolManager(cert_reqs='CERT_NONE')
+def send_sms(router_ip, password, phone_number, message):
+    """Sendet eine SMS über den ZTE MC801A Router."""
+    url = f"http://{router_ip}/goform/sendSms"
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    data = {"number": phone_number, "sms": message}
+    response = requests.post(url, data=data, headers=headers, auth=("admin", password))
+    if response.status_code == 200:
+        print(f"SMS erfolgreich gesendet an {phone_number}: {message}")
+    else:
+        print(f"Fehler beim Senden der SMS: {response.text}")
 
+def get_sms(router_ip, password):
+    """Liest eingehende SMS vom ZTE MC801A aus."""
+    url = f"http://{router_ip}/goform/getSms"
+    headers = {"Content-Type": "application/json"}
+
+    response = requests.get(url, headers=headers, auth=("admin", password))
+    if response.status_code == 200:
+       return json.loads(response.text)
+    else:
+       print(f"Fehler beim Abrufen von SMS: {response.text}")
+       return None
+            
 def get_sms_time():
     logger.debug("Generating SMS time")
     return datetime.now().strftime("%y;%m;%d;%H;%M;%S;+2")
@@ -93,29 +115,7 @@ class zteRouter:
         except Exception as e:
             logger.error(f"Failed to retrieve SSL certificate for {hostname}:{port}: {e}")
             return None
-    def send_sms(router_ip, password, phone_number, message):
-        """Sendet eine SMS über den ZTE MC801A Router."""
-        url = f"http://{router_ip}/goform/sendSms"
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        data = {"number": phone_number, "sms": message}
 
-        response = requests.post(url, data=data, headers=headers, auth=("admin", password))
-        if response.status_code == 200:
-            print(f"SMS erfolgreich gesendet an {phone_number}: {message}")
-        else:
-            print(f"Fehler beim Senden der SMS: {response.text}")
-
-    def get_sms(router_ip, password):
-        """Liest eingehende SMS vom ZTE MC801A aus."""
-        url = f"http://{router_ip}/goform/getSms"
-        headers = {"Content-Type": "application/json"}
-
-        response = requests.get(url, headers=headers, auth=("admin", password))
-        if response.status_code == 200:
-           return json.loads(response.text)
-        else:
-           print(f"Fehler beim Abrufen von SMS: {response.text}")
-           return None
         
     def parse_certificate(self, pem_cert):
         logger.debug("Parsing PEM certificate")
