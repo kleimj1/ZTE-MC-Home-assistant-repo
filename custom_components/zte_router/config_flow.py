@@ -79,25 +79,7 @@ class ZTERouterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 CONF_PHONE_NUMBER = "phone_number"
 
-class ZTEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for ZTE Router."""
 
-    async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
-        errors = {}
-
-        if user_input is not None:
-            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_PHONE_NUMBER, default=""): str,
-            }
-        )
-
-        return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 
 class ZTERouterOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle an options flow for ZTE Router."""
