@@ -1,40 +1,44 @@
-import subprocess
 import logging
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.components.notify import BaseNotificationService
+from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
+from .mc import send_sms
 
 _LOGGER = logging.getLogger(__name__)
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
-    """Set up ZTE SMS notify service from a config entry."""
-    config = hass.data["zte_router"].get(entry.entry_id)
 
-    if not config:
-        _LOGGER.error("No configuration found for ZTE SMS notify service")
-        return False
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required("host"): cv.string,
+    vol.Required("password"): cv.string,
+})
 
-    async_add_entities([ZTESMSNotificationService(config["phone_number"], config["sms_message"])])
+async def async_get_service(hass: HomeAssistant, config, discovery_info=None):
+    """Holt den SMS-Notify-Dienst."""
+    return ZTESMSNotificationService(config["router_ip"], config["router_password"])
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Richtet den SMS-Notify-Dienst ein."""
+    hass.services.async_register(
+        "notify", "zte_sms", ZTESMSNotificationService(entry.data["host"], entry.data["password"])
+    )
     return True
+
 class ZTESMSNotificationService(BaseNotificationService):
-    """Implementierung des SMS-Dienstes für den ZTE Router."""
+    """Implementierung des SMS-Benachrichtigungsdienstes für den ZTE Router."""
 
     def __init__(self, host, password):
+        """Initialisiert den Dienst."""
         self._host = host
         self._password = password
 
     def send_message(self, message="", **kwargs):
+        """Sendet eine SMS über den Router."""
         targets = kwargs.get("target", [])
         if not targets:
             _LOGGER.error("Keine Zielrufnummer angegeben.")
             return
 
         for target in targets:
-            subprocess.run([
-                "python3",
-                "/config/custom_components/zte_router/mc.py",
-                self._host,
-                self._password,
-                "send_sms",
-                target,
-                message
-            ])
+            send_sms(self._host, self._password, target, message)
+            _LOGGER.info(f"SMS an {target} gesendet: {message}")
