@@ -128,6 +128,7 @@ class ZTESMSSensor(Entity):
         self._password = password
         self._state = None
         self._name = "ZTE SMS Empfang"
+        self._attr_is_diagnostics = False  # ← Korrigierte Eigenschaft
 
     @property
     def name(self):
@@ -136,6 +137,10 @@ class ZTESMSSensor(Entity):
     @property
     def state(self):
         return self._state
+    @property
+    def is_diagnostics(self):
+        """Gibt zurück, ob der Sensor ein Diagnosesensor ist."""
+        return self._attr_is_diagnostics  # ← Jetzt kompatibel mit dem Code in async_setup_entry()
 
     def update(self):
         """Holt die letzte empfangene SMS."""
