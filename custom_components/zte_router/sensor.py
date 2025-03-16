@@ -15,7 +15,7 @@ from .const import (
     DISABLED_SENSORS_MC889, DISABLED_SENSORS_MC888, DISABLED_SENSORS_MC801A,
     DIAGNOSTICS_SENSORS
 )
-
+from .mc import get_sms
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
@@ -116,16 +116,32 @@ def extract_json(output):
         _LOGGER.debug(f"Raw output that caused the error: {output}")
         return "{}"
 
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+    """Set up the ZTE SMS sensor from a config entry."""
+    host = entry.data["host"]
+    password = entry.data["password"]
+    async_add_entities([ZTESMSSensor(host, password)], True)
+
 class ZTESMSSensor(Entity):
     """Sensor für empfangene SMS vom ZTE Router."""
 
-    def __init__(self, coordinator, host, password):
-        super().__init__()
+    def __init__(self, host, password):
+        """Initialisieren des Sensors."""
         self._host = host
         self._password = password
         self._state = None
+        self._name = "ZTE SMS Empfang"
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def state(self):
+        return self._state
 
     def update(self):
+        """Holt die letzte empfangene SMS."""
         sms_list = get_sms(self._host, self._password)
         if sms_list:
             self._state = sms_list[-1]["content"]  # Letzte empfangene SMS
