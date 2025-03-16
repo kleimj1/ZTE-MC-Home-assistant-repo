@@ -1,13 +1,12 @@
 {
   "domain": "zte_router",
   "name": "ZTE Router",
-  "codeowners": ["@Kajkac"],
+  "version": "1.0.1",
   "config_flow": true,
-  "dependencies": ["http"],
-  "documentation": "https://github.com/Kajkac/ZTE-MC-Home-assistant-repo",
-  "integration_type": "hub",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@kleimj1"],
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/Kajkac/ZTE-MC-Home-assistant-repo/issues",
-  "requirements": ["aiohttp"],
-  "version": "1.0.31"
+  "integration_type": "hub",
+  "services": ["notify"]
 }
