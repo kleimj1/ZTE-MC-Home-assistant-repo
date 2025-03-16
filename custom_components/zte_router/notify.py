@@ -3,7 +3,16 @@ import logging
 from homeassistant.components.notify import BaseNotificationService
 
 _LOGGER = logging.getLogger(__name__)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+    """Set up ZTE SMS notify service from a config entry."""
+    config = hass.data["zte_router"].get(entry.entry_id)
 
+    if not config:
+        _LOGGER.error("No configuration found for ZTE SMS notify service")
+        return False
+
+    async_add_entities([ZTESMSNotificationService(config["phone_number"], config["sms_message"])])
+    return True
 class ZTESMSNotificationService(BaseNotificationService):
     """Implementierung des SMS-Dienstes für den ZTE Router."""
 
