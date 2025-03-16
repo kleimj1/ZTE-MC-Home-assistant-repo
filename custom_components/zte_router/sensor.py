@@ -99,7 +99,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     sensors.append(monthly_rx_gb(coordinator))
     sensors.append(DataLeftSensor(coordinator))
     sensors.append(ConnectionUptimeSensor(coordinator))
-
+    # SMS-Sensor
+    sensors.append(ZTESMSSensor(ip_entry, password_entry))
+    
     _LOGGER.info(f"Sensors added: {[sensor.name for sensor in sensors]}")
     _LOGGER.info(f"Diagnostics sensors: {[sensor.name for sensor in sensors if sensor.is_diagnostics]}")
 
@@ -116,11 +118,6 @@ def extract_json(output):
         _LOGGER.debug(f"Raw output that caused the error: {output}")
         return "{}"
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
-    """Set up the ZTE SMS sensor from a config entry."""
-    host = entry.data["router_ip"]
-    password = entry.data["router_password"]
-    async_add_entities([ZTESMSSensor(host, password)], True)
 
 class ZTESMSSensor(Entity):
     """Sensor für empfangene SMS vom ZTE Router."""
